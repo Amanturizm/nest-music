@@ -14,7 +14,7 @@ export class Artist {
   @Prop()
   info: string;
 
-  @Prop({ required: true, default: false })
+  @Prop({ default: false })
   isPublished: boolean;
 }
 
