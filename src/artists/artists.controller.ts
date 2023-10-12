@@ -3,9 +3,7 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
-  Patch,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -28,6 +26,11 @@ export class ArtistsController {
     return this.artistModel.find();
   }
 
+  @Get(':id')
+  async getOne(@Param('id') _id: string) {
+    return this.artistModel.findById(_id);
+  }
+
   @Post()
   @UseInterceptors(
     FileInterceptor('image', { dest: './public/uploads/artists' }),
@@ -48,20 +51,5 @@ export class ArtistsController {
   @Delete(':id')
   async delete(@Param('id') _id: string) {
     return this.artistModel.deleteOne({ _id });
-  }
-
-  @Patch(':id/togglePublished')
-  async update(@Param('id') _id: string): Promise<{ message: string }> {
-    const artist = await this.artistModel.findById(_id);
-
-    if (!artist) {
-      throw new NotFoundException('Artist not found');
-    }
-
-    artist.isPublished = !artist.isPublished;
-
-    await artist.save();
-
-    return { message: 'OK' };
   }
 }

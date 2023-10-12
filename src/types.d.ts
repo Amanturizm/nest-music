@@ -4,7 +4,6 @@ export interface IArtist {
   _id: mongoose.Schema.Types.ObjectId;
   name: string;
   info: string;
-  isPublished: boolean;
   image: string | null;
 }
 
@@ -13,7 +12,15 @@ export interface IAlbum {
   artist: mongoose.Schema.Types.ObjectId;
   name: string;
   date: number;
-  isPublished: boolean;
   image: string | null;
   amount: number;
+}
+
+export interface ITrack {
+  _id: mongoose.Schema.Types.ObjectId;
+  album: mongoose.Schema.Types.ObjectId;
+  name: string;
+  duration: string;
+  number: number;
+  youtube: string;
 }

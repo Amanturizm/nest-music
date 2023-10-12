@@ -16,9 +16,6 @@ export class Album {
 
   @Prop()
   image: string;
-
-  @Prop({ default: false })
-  isPublished: boolean;
 }
 
 export const AlbumSchema = SchemaFactory.createForClass(Album);

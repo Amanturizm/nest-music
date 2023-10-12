@@ -1,6 +1,0 @@
-[master ae398df] added artists schema and controller
- Date: Wed Oct 11 23:59:33 2023 +0600
- 6 files changed, 136 insertions(+), 3 deletions(-)
- create mode 100644 src/albums/albums.controller.ts
- create mode 100644 src/albums/create-album.dto.ts
- create mode 100644 src/schemas/album.schema.ts
