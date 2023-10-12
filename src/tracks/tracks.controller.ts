@@ -3,9 +3,7 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
-  Patch,
   Post,
   Query,
 } from '@nestjs/common';
