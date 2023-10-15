@@ -5,6 +5,8 @@ export interface IArtist {
   name: string;
   info: string;
   image: string | null;
+  isPublished: boolean;
+  user: mongoose.Schema.Types.ObjectId;
 }
 
 export interface IAlbum {
@@ -14,6 +16,8 @@ export interface IAlbum {
   date: number;
   image: string | null;
   amount: number;
+  isPublished: boolean;
+  user: mongoose.Schema.Types.ObjectId;
 }
 
 export interface ITrack {
@@ -23,4 +27,16 @@ export interface ITrack {
   duration: string;
   number: number;
   youtube: string;
+  isPublished: boolean;
+  user: mongoose.Schema.Types.ObjectId;
+}
+
+export interface IUser {
+  username: string;
+  password: string;
+  token: string;
+  role: string;
+  displayName?: string;
+  avatar?: string | null;
+  googleID?: string;
 }

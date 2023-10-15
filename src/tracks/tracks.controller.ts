@@ -1,17 +1,11 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Query,
-} from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Track, TrackDocument } from '../schemas/track.schema';
 import { Model } from 'mongoose';
 import { ITrack } from '../types';
-import { CreateTrackDto } from './create-track.dto';
+import { RolesGuard } from '../roles/roles.guard';
+import { Roles } from '../roles/roles.decorator';
+import { RequestWithUser, TokenAuthGuard } from '../auth/token-auth.guard';
 
 @Controller('tracks')
 export class TracksController {
@@ -53,13 +47,16 @@ export class TracksController {
   }
 
   @Post()
-  async create(@Body() trackData: CreateTrackDto) {
+  @UseGuards(TokenAuthGuard, RolesGuard)
+  @Roles('user')
+  async create(@Req() req: RequestWithUser) {
     const track = new this.trackModel({
-      name: trackData.name,
-      album: trackData.album,
-      number: trackData.number,
-      duration: trackData.duration,
-      youtube: trackData.youtube,
+      name: req.body.name,
+      album: req.body.album,
+      number: req.body.number,
+      duration: req.body.duration,
+      youtube: req.body.youtube,
+      user: req.user._id,
     });
 
     await track.save();
@@ -67,8 +64,10 @@ export class TracksController {
   }
 
   @Delete(':id')
+  @UseGuards(TokenAuthGuard, RolesGuard)
+  @Roles('admin')
   async delete(@Param('id') _id: string) {
-    this.trackModel.deleteOne({ _id });
+    await this.trackModel.deleteOne({ _id });
 
     return { message: 'Track deleted!' };
   }

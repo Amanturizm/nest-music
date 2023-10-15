@@ -16,6 +16,12 @@ export class Album {
 
   @Prop()
   image: string;
+
+  @Prop({ default: false })
+  isPublished: boolean;
+
+  @Prop({ ref: 'User', required: true })
+  user: mongoose.Schema.Types.ObjectId;
 }
 
 export const AlbumSchema = SchemaFactory.createForClass(Album);

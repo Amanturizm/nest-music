@@ -37,7 +37,7 @@ export class UsersController {
       username: req.body.username,
       password: req.body.password,
       displayName: req.body.displayName || '',
-      avatar: req.file ? 'images/' + req.file.filename : null,
+      avatar: req.file ? 'fixtures/' + req.file.filename : null,
     });
 
     user.generateToken();
@@ -48,7 +48,7 @@ export class UsersController {
   @UseGuards(AuthGuard('local'))
   @Post('sessions')
   login(@Req() req: Request) {
-    return req.user;
+    return { message: 'Username and password correct!', user: req.user };
   }
 
   @UseGuards(TokenAuthGuard)

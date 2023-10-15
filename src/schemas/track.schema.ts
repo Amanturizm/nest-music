@@ -19,6 +19,12 @@ export class Track {
 
   @Prop({ required: true })
   youtube: string;
+
+  @Prop({ default: false })
+  isPublished: boolean;
+
+  @Prop({ ref: 'User', required: true })
+  user: mongoose.Schema.Types.ObjectId;
 }
 
 export const TrackSchema = SchemaFactory.createForClass(Track);
