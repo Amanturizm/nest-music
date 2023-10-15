@@ -2,7 +2,7 @@ import {
   Controller,
   Delete,
   Get,
-  Param,
+  Param, Patch,
   Post,
   Query,
   Req,
@@ -90,5 +90,17 @@ export class AlbumsController {
     await this.albumModel.deleteOne({ _id });
 
     return { message: 'Album deleted!' };
+  }
+
+  @Patch(':id/togglePublished')
+  @UseGuards(TokenAuthGuard, RolesGuard)
+  @Roles('admin')
+  async updateField(@Req() req: RequestWithUser) {
+    const album = await this.albumModel.findById(req.params.id);
+
+    album.isPublished = !album.isPublished;
+
+    await album.save();
+    return { message: 'Field toggled!' };
   }
 }

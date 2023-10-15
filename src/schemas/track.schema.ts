@@ -14,7 +14,7 @@ export class Track {
   @Prop({ required: true })
   duration: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, min: [1, 'Min number - 1'] })
   number: number;
 
   @Prop({ required: true })

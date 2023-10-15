@@ -4,14 +4,16 @@ import {
   Delete,
   Get,
   Param,
-  Post, Req,
+  Patch,
+  Post,
+  Req,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Artist, ArtistDocument } from '../schemas/artist.schema';
-import { Model } from 'mongoose';
+import { HydratedDocument, Model } from 'mongoose';
 import { CreateArtistDto } from './create-artist.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RolesGuard } from '../roles/roles.guard';
@@ -55,5 +57,17 @@ export class ArtistsController {
   @Roles('admin')
   async delete(@Param('id') _id: string) {
     return this.artistModel.deleteOne({ _id });
+  }
+
+  @Patch(':id/togglePublished')
+  @UseGuards(TokenAuthGuard, RolesGuard)
+  @Roles('admin')
+  async updateField(@Req() req: RequestWithUser) {
+    const artist = await this.artistModel.findById(req.params.id);
+
+    artist.isPublished = !artist.isPublished;
+
+    await artist.save();
+    return { message: 'Field toggled!' };
   }
 }

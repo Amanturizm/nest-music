@@ -1,7 +1,18 @@
-import { Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Track, TrackDocument } from '../schemas/track.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { ITrack } from '../types';
 import { RolesGuard } from '../roles/roles.guard';
 import { Roles } from '../roles/roles.decorator';
@@ -50,17 +61,26 @@ export class TracksController {
   @UseGuards(TokenAuthGuard, RolesGuard)
   @Roles('user')
   async create(@Req() req: RequestWithUser) {
-    const track = new this.trackModel({
-      name: req.body.name,
-      album: req.body.album,
-      number: req.body.number,
-      duration: req.body.duration,
-      youtube: req.body.youtube,
-      user: req.user._id,
-    });
+    try {
+      const track = new this.trackModel({
+        name: req.body.name,
+        album: req.body.album,
+        number: req.body.number,
+        duration: req.body.duration,
+        youtube: req.body.youtube,
+        user: req.user._id,
+      });
 
-    await track.save();
-    return track;
+      await track.save();
+
+      return track;
+    } catch (e) {
+      if (e instanceof mongoose.Error.ValidationError) {
+        throw new BadRequestException(e);
+      }
+
+      return e;
+    }
   }
 
   @Delete(':id')
@@ -70,5 +90,17 @@ export class TracksController {
     await this.trackModel.deleteOne({ _id });
 
     return { message: 'Track deleted!' };
+  }
+
+  @Patch(':id/togglePublished')
+  @UseGuards(TokenAuthGuard, RolesGuard)
+  @Roles('admin')
+  async updateField(@Req() req: RequestWithUser) {
+    const track = await this.trackModel.findById(req.params.id);
+
+    track.isPublished = !track.isPublished;
+
+    await track.save();
+    return { message: 'Field toggled!' };
   }
 }
