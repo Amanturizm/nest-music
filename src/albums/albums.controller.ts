@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -101,9 +102,23 @@ export class AlbumsController {
   @UseGuards(TokenAuthGuard, RolesGuard)
   @Roles('admin')
   async delete(@Param('id') _id: string) {
-    await this.albumModel.deleteOne({ _id });
+    try {
+      const deletedAlbum = await this.albumModel.deleteOne({ _id });
 
-    return { message: 'Album deleted!' };
+      if (deletedAlbum.deletedCount < 1) {
+        throw new NotFoundException('Album not found!');
+      }
+
+      await this.trackModel.deleteMany({ album: _id });
+
+      return { message: 'Album deleted!' };
+    } catch (e) {
+      if (e instanceof mongoose.Error.ValidationError) {
+        throw new BadRequestException(e);
+      }
+
+      return e;
+    }
   }
 
   @Patch(':id/togglePublished')

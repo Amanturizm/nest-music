@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -13,17 +14,24 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Artist, ArtistDocument } from '../schemas/artist.schema';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { HydratedDocument, Model } from 'mongoose';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { RolesGuard } from '../roles/roles.guard';
 import { Roles } from '../roles/roles.decorator';
 import { RequestWithUser, TokenAuthGuard } from '../auth/token-auth.guard';
+import { Track, TrackDocument } from '../schemas/track.schema';
+import { Album, AlbumDocument } from '../schemas/album.schema';
+import { IAlbum } from '../types';
 
 @Controller('artists')
 export class ArtistsController {
   constructor(
     @InjectModel(Artist.name)
     private readonly artistModel: Model<ArtistDocument>,
+    @InjectModel(Album.name)
+    private readonly albumModel: Model<AlbumDocument>,
+    @InjectModel(Track.name)
+    private readonly trackModel: Model<TrackDocument>,
   ) {}
 
   @Get()
@@ -69,7 +77,29 @@ export class ArtistsController {
   @UseGuards(TokenAuthGuard, RolesGuard)
   @Roles('admin')
   async delete(@Param('id') _id: string) {
-    return this.artistModel.deleteOne({ _id });
+    try {
+      const deletedArtist = await this.artistModel.deleteOne({ _id });
+
+      if (deletedArtist.deletedCount < 1) {
+        throw new NotFoundException('Artist not found!');
+      }
+
+      const albums = (await this.albumModel.find({ artist: _id })) as HydratedDocument<IAlbum[]>;
+
+      await Promise.all(
+        albums.map(async ({ _id }) => await this.trackModel.deleteMany({ album: _id })),
+      );
+
+      await this.albumModel.deleteMany({ artist: _id });
+
+      return { message: 'Artist deleted!' };
+    } catch (e) {
+      if (e instanceof mongoose.Error.ValidationError) {
+        throw new BadRequestException(e);
+      }
+
+      return e;
+    }
   }
 
   @Patch(':id/togglePublished')
