@@ -11,7 +11,7 @@ export class Album {
   @Prop({ required: true, unique: true })
   name: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, min: [1900, 'Min number - 1900'] })
   date: number;
 
   @Prop()

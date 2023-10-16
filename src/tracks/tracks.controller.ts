@@ -75,6 +75,10 @@ export class TracksController {
 
       return track;
     } catch (e) {
+      if (e.code === 11000) {
+        throw new BadRequestException('Track with the same name already exists.');
+      }
+
       if (e instanceof mongoose.Error.ValidationError) {
         throw new BadRequestException(e);
       }

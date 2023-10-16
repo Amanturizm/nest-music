@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../schemas/user.schema';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
@@ -32,34 +32,49 @@ export class UsersController {
 
   @Post()
   @UseInterceptors(FileInterceptor('image', { dest: './public/uploads/users' }))
-  register(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
-    const user = new this.userModel({
-      username: req.body.username,
-      password: req.body.password,
-      displayName: req.body.displayName || '',
-      avatar: req.file ? 'fixtures/' + req.file.filename : null,
-    });
+  async register(@UploadedFile() file: Express.Multer.File, @Req() req: Request) {
+    try {
+      const user = new this.userModel({
+        username: req.body.username,
+        password: req.body.password,
+        displayName: req.body.displayName || '',
+        avatar: req.file ? '/uploads/users/' + req.file.filename : null,
+      });
 
-    user.generateToken();
+      user.generateToken();
 
-    return user.save();
+      await user.save();
+      return user;
+    } catch (e) {
+      if (e.code === 11000) {
+        throw new BadRequestException('A user with the same username already exists.');
+      }
+
+      if (e instanceof mongoose.Error.ValidationError) {
+        throw new BadRequestException(e);
+      }
+
+      return e;
+    }
   }
 
-  @UseGuards(AuthGuard('local'))
   @Post('sessions')
+  @UseGuards(AuthGuard('local'))
   login(@Req() req: Request) {
     return { message: 'Username and password correct!', user: req.user };
   }
 
-  @UseGuards(TokenAuthGuard)
   @Delete('sessions')
-  async delete(@Req() req: RequestWithUser) {
+  @UseGuards(TokenAuthGuard)
+  async logout(@Req() req: RequestWithUser) {
     const { _id } = req.user;
 
     const user = await this.userModel.findById(_id);
 
     user.generateToken();
+
     await user.save();
+
     return { message: 'User token changed!' };
   }
 

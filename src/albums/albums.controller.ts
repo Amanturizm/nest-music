@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   Controller,
   Delete,
   Get,
-  Param, Patch,
+  Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -19,7 +21,6 @@ import { Track, TrackDocument } from '../schemas/track.schema';
 import { RolesGuard } from '../roles/roles.guard';
 import { Roles } from '../roles/roles.decorator';
 import { RequestWithUser, TokenAuthGuard } from '../auth/token-auth.guard';
-import * as stream from 'stream';
 
 @Controller('albums')
 export class AlbumsController {
@@ -72,15 +73,28 @@ export class AlbumsController {
   @Roles('user')
   @UseInterceptors(FileInterceptor('image', { dest: './public/uploads/albums' }))
   async create(@UploadedFile() file: Express.Multer.File, @Req() req: RequestWithUser) {
-    const album = new this.albumModel({
-      artist: req.body.artist,
-      name: req.body.name,
-      date: req.body.date,
-      image: file ? '/uploads/artists/' + file.filename : null,
-      user: req.user._id,
-    });
+    try {
+      const album = new this.albumModel({
+        artist: req.body.artist,
+        name: req.body.name,
+        date: req.body.date,
+        image: file ? '/uploads/artists/' + file.filename : null,
+        user: req.user._id,
+      });
 
-    return album.save();
+      await album.save();
+      return album;
+    } catch (e) {
+      if (e.code === 11000) {
+        throw new BadRequestException('Album with the same name already exists.');
+      }
+
+      if (e instanceof mongoose.Error.ValidationError) {
+        throw new BadRequestException(e);
+      }
+
+      return e;
+    }
   }
 
   @Delete(':id')
